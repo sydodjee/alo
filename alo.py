@@ -10,29 +10,24 @@ async def call_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     mentions = []
 
-    # Попытка получить всех участников чата
     try:
-        # Telegram API не позволяет напрямую получать всех участников в больших группах,
-        # поэтому используется перебор ID в диапазоне. Бот должен быть админом.
-        members_count = await context.bot.get_chat_member_count(chat.id)
+        # Получаем список администраторов группы
+        members = await context.bot.get_chat_administrators(chat.id)
+        mentions = [f"@{m.user.username}" for m in members if m.user.username]
 
-        for user_id in range(1, members_count + 1):
-            try:
-                member = await context.bot.get_chat_member(chat.id, user_id)
-                if member.user.username:  # Упоминаем только пользователей с username
-                    mentions.append(f"@{member.user.username}")
-                else:  # Если нет username, упоминаем по имени
-                    mentions.append(f"<a href='tg://user?id={member.user.id}'>{member.user.first_name}</a>")
-            except Exception:
-                pass  # Игнорируем ошибки, например, если пользователь недоступен
+        # Добавляем символическое упоминание @all
+        if mentions:
+            mentions.insert(0, "@all")  # Имитируем общий вызов
 
-    except Exception:
-        # Если не удалось получить всех участников, выводим сообщение об ошибке
-        mentions.append("Не удалось получить список участников. Убедитесь, что бот является администратором.")
+        # Формируем сообщение
+        message = " ".join(mentions) + "\n" + " ".join(context.args)
+        await update.message.reply_text(message, parse_mode=ParseMode.HTML)
 
-    # Формируем сообщение с упоминанием всех
-    message = " ".join(mentions) + "\n" + " ".join(context.args)
-    await update.message.reply_text(message, parse_mode=ParseMode.HTML)
+    except Exception as e:
+        await update.message.reply_text(
+            "Не удалось получить список участников. Убедитесь, что бот является администратором.",
+            parse_mode=ParseMode.HTML
+        )
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
