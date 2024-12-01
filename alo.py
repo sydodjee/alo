@@ -4,34 +4,24 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import os
 
 BOT_TOKEN = '7649317053:AAEuahOjsqpu2aqQGs5qlJCsKvL35qU-leo'
-WEBHOOK_URL = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}"
+WEBHOOK_URL = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}"  # Render автоматически предоставит URL
 
 async def call_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
+    members = await context.bot.get_chat_members(chat.id)  # Получаем всех участников чата
+
     mentions = []
+    for member in members:
+        # Проверяем, что у пользователя есть юзернейм
+        if member.user.username:
+            mentions.append(f"@{member.user.username}")
 
-    try:
-        # Получаем всех администраторов чата
-        members = await context.bot.get_chat_administrators(chat.id)
-
-        # Генерируем список упоминаний пользователей через их username
-        for member in members:
-            if member.user.username:
-                mentions.append(f"@{member.user.username}")
-
-        if mentions:
-            message = " ".join(mentions) + "\n" + " ".join(context.args)
-        else:
-            message = "Не удалось найти активных участников."
-
-        # Отправляем сообщение с упоминаниями
-        await update.message.reply_text(message, parse_mode=ParseMode.HTML)
-
-    except Exception as e:
-        await update.message.reply_text(
-            f"Ошибка: {e}",
-            parse_mode=ParseMode.HTML
-        )
+    # Если есть участники с юзернеймами, формируем сообщение
+    if mentions:
+        message = " ".join(mentions) + "\n" + " ".join(context.args)
+        await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+    else:
+        await update.message.reply_text("Нет участников с юзернеймами!")
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
