@@ -8,7 +8,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 BOT_TOKEN = '7649317053:AAEuahOjsqpu2aqQGs5qlJCsKvL35qU-leo'
 WEBHOOK_URL = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}"  # Render автоматически предоставит URL
 GITHUB_TOKEN = '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'  # Токен GitHub
-GITHUB_REPO = 'bot-users'  # Репозиторий GitHub
+GITHUB_REPO = 'sydodjee/bot-users'  # Репозиторий GitHub
 GITHUB_FILE_PATH = 'users.txt'  # Путь к файлу в репозитории
 
 # URL для API запросов GitHub
