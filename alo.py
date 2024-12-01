@@ -38,6 +38,11 @@ async def call_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Получаем всех пользователей
     all_users = get_all_users()
 
+    # Проверяем, если список пользователей пустой, не отправляем сообщение
+    if not all_users:
+        await update.message.reply_text("No users found!")
+        return
+
     # Создаем строку с упоминаниями всех пользователей
     mentions = [f"@{username}" for username in all_users]
     message = " ".join(mentions) + "\n" + " ".join(context.args)
