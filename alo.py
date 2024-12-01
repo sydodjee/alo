@@ -10,9 +10,15 @@ WEBHOOK_URL = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}"  # Render 
 def add_user(username):
     if username is None:
         return
+    # Проверяем, если файл существует, открываем его для чтения
+    if not os.path.exists('users.txt'):
+        with open('users.txt', 'w'):  # Создаем файл, если его нет
+            pass
+    
     # Проверяем, если такого пользователя нет в файле
     with open('users.txt', 'r') as f:
         users = f.readlines()
+    
     users = [user.strip() for user in users]
 
     if username not in users:
