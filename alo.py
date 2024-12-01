@@ -22,7 +22,7 @@ def add_user(username):
     # Получаем текущий контент файла из репозитория
     headers = {'Authorization': f'token {GITHUB_TOKEN}'}
     response = requests.get(GITHUB_API_URL, headers=headers)
-    
+
     if response.status_code == 200:
         file_content = response.json()
         content = file_content['content']
@@ -30,6 +30,7 @@ def add_user(username):
         users = requests.utils.unquote(content).splitlines()
     else:
         users = []
+        sha = None  # Если файла нет, то sha не существует
 
     # Если пользователя еще нет в файле, добавляем его
     if username not in users:
@@ -39,12 +40,20 @@ def add_user(username):
     new_content = "\n".join(users).encode('utf-8')
     encoded_content = requests.utils.quote(new_content)
 
+    # Если sha есть, обновляем файл, иначе создаём новый
+    if sha:
+        update_data = {
+            "message": "Add user",
+            "sha": sha,
+            "content": encoded_content,
+        }
+    else:
+        update_data = {
+            "message": "Create file with new user",
+            "content": encoded_content,
+        }
+
     # Отправляем запрос для обновления файла на GitHub
-    update_data = {
-        "message": "Add user",
-        "sha": sha,
-        "content": encoded_content,
-    }
     response = requests.put(GITHUB_API_URL, json=update_data, headers=headers)
     return response.status_code == 200
 
