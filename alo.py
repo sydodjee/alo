@@ -6,28 +6,42 @@ import os
 BOT_TOKEN = '7649317053:AAEuahOjsqpu2aqQGs5qlJCsKvL35qU-leo'
 WEBHOOK_URL = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}"  # Render автоматически предоставит URL
 
+# Функция для добавления пользователя в файл
+def add_user(username):
+    with open('users.txt', 'a') as f:
+        f.write(f"{username}\n")
+
+# Функция для получения всех пользователей из файла
+def get_all_users():
+    if not os.path.exists('users.txt'):
+        return []
+    
+    with open('users.txt', 'r') as f:
+        users = f.readlines()
+    return [user.strip() for user in users]
+
+# Обработчик команды /alo
 async def call_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat = update.effective_chat
-    members = await context.bot.get_chat_members(chat.id)  # Получаем всех участников чата
+    # Добавляем текущего пользователя в файл
+    user = update.message.from_user.username
+    add_user(user)
 
-    mentions = []
-    for member in members:
-        # Проверяем, что у пользователя есть юзернейм
-        if member.user.username:
-            mentions.append(f"@{member.user.username}")
+    # Получаем всех пользователей
+    all_users = get_all_users()
 
-    # Если есть участники с юзернеймами, формируем сообщение
-    if mentions:
-        message = " ".join(mentions) + "\n" + " ".join(context.args)
-        await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
-    else:
-        await update.message.reply_text("Нет участников с юзернеймами!")
+    # Создаем строку с упоминаниями всех пользователей
+    mentions = [f"@{username}" for username in all_users]
+    message = " ".join(mentions) + "\n" + " ".join(context.args)
+
+    # Отправляем сообщение
+    await update.message.reply_text(message, parse_mode=ParseMode.HTML)
 
 if __name__ == '__main__':
+    # Создаем приложение
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler('alo', call_command))
 
-    # Настраиваем webhook
+    # Настроим webhook
     app.run_webhook(
         listen="0.0.0.0", 
         port=int(os.environ.get("PORT", 8443)), 
