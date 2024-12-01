@@ -11,18 +11,20 @@ async def call_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mentions = []
 
     try:
-        # Получаем всех участников чата
+        # Получаем всех администраторов чата
         members = await context.bot.get_chat_administrators(chat.id)
 
-        # Генерируем список псевдонимов (символов), чтобы упомянуть всех участников
-        for i, member in enumerate(members):
-            mentions.append(f"User_{i+1}")
+        # Генерируем список упоминаний пользователей через их username
+        for member in members:
+            if member.user.username:
+                mentions.append(f"@{member.user.username}")
 
         if mentions:
             message = " ".join(mentions) + "\n" + " ".join(context.args)
         else:
             message = "Не удалось найти активных участников."
 
+        # Отправляем сообщение с упоминаниями
         await update.message.reply_text(message, parse_mode=ParseMode.HTML)
 
     except Exception as e:
