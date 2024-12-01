@@ -1,43 +1,73 @@
+import os
+import requests
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import os
 
+# Токен и репозиторий на GitHub
 BOT_TOKEN = '7649317053:AAEuahOjsqpu2aqQGs5qlJCsKvL35qU-leo'
 WEBHOOK_URL = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}"  # Render автоматически предоставит URL
+GITHUB_TOKEN = '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'  # Токен GitHub
+GITHUB_REPO = 'bot-users'  # Репозиторий GitHub
+GITHUB_FILE_PATH = 'users.txt'  # Путь к файлу в репозитории
 
-# Функция для добавления пользователя в файл (если он еще не добавлен)
+# URL для API запросов GitHub
+GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE_PATH}"
+
+# Функция для добавления пользователя в файл на GitHub
 def add_user(username):
     if username is None:
         return
-    # Проверяем, если файл существует, открываем его для чтения
-    if not os.path.exists('users.txt'):
-        with open('users.txt', 'w'):  # Создаем файл, если его нет
-            pass
-    
-    # Проверяем, если такого пользователя нет в файле
-    with open('users.txt', 'r') as f:
-        users = f.readlines()
-    
-    users = [user.strip() for user in users]
 
+    # Получаем текущий контент файла из репозитория
+    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    response = requests.get(GITHUB_API_URL, headers=headers)
+    
+    if response.status_code == 200:
+        file_content = response.json()
+        content = file_content['content']
+        sha = file_content['sha']
+        users = requests.utils.unquote(content).splitlines()
+    else:
+        users = []
+
+    # Если пользователя еще нет в файле, добавляем его
     if username not in users:
-        with open('users.txt', 'a') as f:
-            f.write(f"{username}\n")
+        users.append(username)
 
-# Функция для получения всех пользователей из файла
+    # Кодируем содержимое файла и отправляем обновление в репозиторий
+    new_content = "\n".join(users).encode('utf-8')
+    encoded_content = requests.utils.quote(new_content)
+
+    # Отправляем запрос для обновления файла на GitHub
+    update_data = {
+        "message": "Add user",
+        "sha": sha,
+        "content": encoded_content,
+    }
+    response = requests.put(GITHUB_API_URL, json=update_data, headers=headers)
+    return response.status_code == 200
+
+# Функция для получения всех пользователей из файла на GitHub
 def get_all_users():
-    if not os.path.exists('users.txt'):
-        return []
-    
-    with open('users.txt', 'r') as f:
-        users = f.readlines()
-    return [user.strip() for user in users]
+    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    response = requests.get(GITHUB_API_URL, headers=headers)
 
-# Обработчик всех сообщений (добавляем пользователя в файл)
+    if response.status_code == 200:
+        file_content = response.json()
+        content = file_content['content']
+        users = requests.utils.unquote(content).splitlines()
+        return users
+    else:
+        return []
+
+# Обработчик всех сообщений (добавляем пользователя в файл на GitHub)
 async def add_user_from_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user.username
-    add_user(user)
+    if add_user(user):
+        print(f"User {user} added to GitHub.")
+    else:
+        print(f"Failed to add user {user}.")
 
 # Обработчик команды /alo
 async def call_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
