@@ -25,4 +25,4 @@ jobs:
 
     - name: Run Bot
       run: |
-        python alo.py
+        python alo/alo.py
