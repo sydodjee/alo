@@ -11,12 +11,11 @@ async def call_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mentions = []
 
     try:
-        # Перебираем участников группы, заменяя их на псевдонимы/символы
-        # Получаем всех участников
-        members = await context.bot.get_chat_members_count(chat.id)
-        
-        for i in range(members):
-            # Можно использовать любой символ или псевдоним, чтобы обойти ограничения
+        # Получаем всех участников чата
+        members = await context.bot.get_chat_members(chat.id)
+
+        # Генерируем список псевдонимов (символов), чтобы упомянуть всех участников
+        for i, member in enumerate(members):
             mentions.append(f"User_{i+1}")
 
         if mentions:
@@ -41,5 +40,3 @@ if __name__ == '__main__':
         listen="0.0.0.0", 
         port=int(os.environ.get("PORT", 8443)), 
         url_path=BOT_TOKEN,
-        webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}"
-    )
