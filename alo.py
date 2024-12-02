@@ -29,7 +29,7 @@ def tag_all(update: Update, context: CallbackContext) -> None:
 # Main function to run the bot
 def main():
     # Replace 'YOUR_TOKEN_HERE' with your actual bot token
-    TOKEN = "YOUR_TOKEN_HERE"
+    TOKEN = "7649317053:AAEuahOjsqpu2aqQGs5qlJCsKvL35qU-leo"
     updater = Updater(TOKEN)
 
     dp = updater.dispatcher
